@@ -1,163 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Mini Oyun</title>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#1a1a1a;}
+#ground{position:absolute;bottom:0;left:0;width:100%;height:45%;background:repeating-linear-gradient(45deg,#3a3a3a 0,#3a3a3a 20px,#444 20px,#444 40px);transform:perspective(800px) rotateX(55deg);transform-origin:bottom;animation:groundGlow 3s infinite alternate}
+@keyframes groundGlow{0%{background-position:0 0}100%{background-position:40px 40px}}
+#game{position:relative;width:100%;height:100%;color:#fff;perspective:1200px;overflow:hidden}
+.big-text{font-size:5vw;max-width:90%;margin:4vh auto 2vh;line-height:1.35;animation:slideDown 1s ease;text-align:center;text-shadow:0 0 15px rgba(0,0,0,.7)}
+@keyframes slideDown{from{opacity:0;transform:translateY(-40px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fade 1.5s forwards}
+@keyframes fade{to{opacity:0}}
+.doors{position:absolute;left:50%;bottom:25%;transform:translateX(-50%);display:flex;gap:12vw;justify-content:center}
+.door{width:25vw;max-width:150px;height:40vw;max-height:220px;border-radius:14px;background:linear-gradient(180deg,#9b6b3d,#5b381c);box-shadow:0 20px 40px rgba(0,0,0,.6);position:relative;cursor:pointer;transform-style:preserve-3d;transition:.4s;display:flex;align-items:flex-start;justify-content:center;padding-top:15%}
+.door::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.15),transparent);border-radius:14px}
+.door::after{content:"";width:10px;height:10px;background:gold;border-radius:50%;position:absolute;right:10px;top:50%;transform:translateY(-50%)}
+.door span{position:absolute;top:15%;width:100%;text-align:center;font-weight:bold;font-size:4vw}
+.door:hover{transform:translateY(-5px) scale(1.08);box-shadow:0 25px 50px rgba(0,0,0,.7)}
+.pass{animation:pass 1s forwards}
+@keyframes pass{to{transform:scale(2) translateZ(200px);opacity:0}}
+.heart-door{background:linear-gradient(180deg,#ff6aa8,#ff2f7d)}
+.heart{font-size:8vw;position:absolute;top:10%;width:100%;text-align:center;animation:beat 1s infinite}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.locked{cursor:not-allowed}
+.chain{position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(0,0,0,.7) 0,rgba(0,0,0,.7) 12px,transparent 12px,transparent 24px);z-index:2}
+.chain-text{position:absolute;bottom:14px;width:100%;text-align:center;font-weight:bold;z-index:3}
+// kilit üstü mesaj
+.lock-msg{position:absolute;top:45%;width:100%;text-align:center;font-size:5vw;font-weight:900;opacity:0;transition:opacity .3s}
+.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="text" class="big-text">meraklımısın</div>
+  <div class="doors" id="doors">
+    <div class="door" id="yes" onclick="chooseYes()"><span>Evet</span></div>
+    <div class="door" id="no" onclick="chooseNo()"><span>Hayır</span></div>
+  </div>
+  <div id="ground"></div>
+</div>
 <script>
-let step = 0;
-let noClicks = 0;
-
-function setText(t, cb){
-  const e = document.getElementById('text');
-  e.classList.add('fade');
-  setTimeout(()=>{
-    e.innerText = t;
-    e.classList.remove('fade');
-    if(cb) setTimeout(cb, 2500);
-  }, 800);
-}
-
-function playSound(){
-  const a = new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3');
-  a.volume = .2;
-  a.play();
-}
-
-/* MERAKLI MISIN – HAYIR */
-function chooseNo(){
-  const no = document.getElementById('no');
-  const yes = document.getElementById('yes');
-  noClicks++;
-
-  no.style.transition = 'transform .4s, opacity .4s';
-  no.style.transform =
-    `scale(${1 - noClicks*0.15}) translateX(${Math.random()*200-100}px)`;
-
-  if(noClicks >= 5){
-    no.style.opacity = '0';
-    setTimeout(()=>no.remove(), 400);
-  }
-  yes.classList.add('door-grow');
-}
-
-/* EVET */
-function chooseYes(){
-  playSound();
-  const y = document.getElementById('yes');
-  y.classList.add('pass');
-  setTimeout(()=>{
-    document.getElementById('doors').innerHTML = '';
-    intro();
-  },1000);
-}
-
-function intro(){
-  const a = [
-    '1. oyuna hoş geldin',
-    'sana birkaç kapı vericez ve onlardan biri seçiceksin',
-    'bu seçimler oyunun finalini değiştiricek',
-    'kolay gelsin （￣︶￣）↗'
-  ];
-  if(step < a.length){
-    setText(a[step], ()=>{
-      step++;
-      intro();
-    });
-  } else {
-    round1();
-  }
-}
-
-function shrinkAndNext(el, fn){
-  playSound();
-  el.style.transition = 'transform .4s, opacity .4s';
-  el.style.transform = 'scale(0.6)';
-  el.style.opacity = '0';
-  setTimeout(fn, 500);
-}
-
-/* 1. TUR */
-function round1(){
-  document.getElementById('doors').innerHTML = `
-    <div class="door" onclick="shrinkAndNext(this, round2)">
-      <span>hyunjin</span>
-    </div>
-    <div class="door" onclick="shrinkAndNext(this, round2)">
-      <span>KAYRA</span>
-    </div>`;
-  setText('kapını seç');
-}
-
-/* 2. TUR */
-function round2(){
-  document.getElementById('doors').innerHTML = `
-    <div class="door" onclick="shrinkAndNext(this, round3)">
-      <span>okul çıkışı dolaşmak</span>
-    </div>
-    <div class="door" onclick="shrinkAndNext(this, round3)">
-      <span>kaçmak</span>
-    </div>`;
-  setText('bir seçim daha');
-}
-
-/* 3. TUR */
-function round3(){
-  document.getElementById('doors').innerHTML = `
-    <div class="door heart-door" onclick="shrinkAndNext(this, round4)">
-      <div class="heart">❤️</div>
-    </div>
-    <div class="door heart-door" onclick="shrinkAndNext(this, round4)">
-      <div class="heart">❤️</div>
-    </div>`;
-  setText('beni seviyormusun');
-}
-
-/* 4. TUR */
-function round4(){
-  document.getElementById('doors').innerHTML = `
-    <div class="door locked" onclick="lockedClick(this)">
-      <div class="chain"></div>
-      <div class="chain-text">ayrılmak</div>
-      <div class="lock-msg">piçsin</div>
-    </div>
-    <div class="door" onclick="finish()">
-      <span>:D</span>
-    </div>`;
-  setText('son karar');
-}
-
-function lockedClick(el){
-  const m = el.querySelector('.lock-msg');
-  m.classList.add('show');
-  setTimeout(()=>m.classList.remove('show'), 1200);
-}
-
-/* FİNAL – YAZILAR DEĞİŞMEDİ */
-function finish(){
-  document.getElementById('doors').innerHTML = '';
-  setTimeout(()=>{
-    const lines = [
-      '2. ayımız kutlu olsun',
-      'ne kadar odun olsanda',
-      'ne kadar utangaç biri olup sanki beni sevmiyormuş gibi yapsanda',
-      'ki bu senin elinde değil biliyorum',
-      'seni çok seviyorum ve böyle devam etmesini diliyorum',
-      ' tek isteğim bu',
-      've bazende senin sevdiğin bir şeyi hem çok kıskanıyorum hemde biraz nefret ediyorum :D',
-      'onun kim olduğunu biliyorsun ama merak etme bu ilişkimizi etkilemiyor',
-      'sadece söyliyim dedim',
-      'neyse bunu yapmakla çok uğraştım güzelmi oldu bilmiyorum ama.......',
-      'aması yok.....',
-      'ne diğicemi bilemedim',
-      'neyse umuyorumki beğenirsin görüşürüz ❤'
-    ];
-
-    let i = 0;
-    function flow(){
-      if(i < lines.length){
-        const t = document.getElementById('text');
-        t.innerText = lines[i];
-        t.style.animation = 'slideDown 2s ease';
-        i++;
-        setTimeout(flow, 2600);
-      }
-    }
-    flow();
-  }, 3500);
-}
+let step=0,noClickCount=0;
+function setText(t,cb){const e=document.getElementById('text');e.classList.add('fade');setTimeout(()=>{e.innerText=t;e.classList.remove('fade');if(cb)setTimeout(cb,2500)},800)}
+function playSound(){const a=new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3');a.volume=.2;a.play()}
+function chooseNo(){const no=document.getElementById('no');const yes=document.getElementById('yes');noClicks++;no.style.transition='transform .4s, opacity .4s';no.style.transform='scale('+(1-noClicks*0.15)+') translateX('+(Math.random()*200-100)+'px)';if(noClicks>=5){no.style.opacity='0';setTimeout(()=>no.remove(),400)}yes.classList.add('door-grow')}px,${y}px) scale(${1-.15*noClickCount})`;if(noClickCount>=5){n.style.transition='opacity 1s';n.style.opacity=0}}
+function chooseYes(){playSound();const y=document.getElementById('yes');y.classList.add('pass');setTimeout(()=>{document.getElementById('doors').innerHTML='';intro()},1000)}
+function intro(){const a=['1. oyuna hoş geldin','sana birkaç kapı vericez ve onlardan biri seçiceksin','bu seçimler oyunun finalini değiştiricek','kolay gelsin （￣︶￣）↗'];if(step<a.length){setText(a[step],()=>{step++;intro()})}else round1()}
+function next(fn){playSound();event.currentTarget.classList.add('pass');setTimeout(fn,1000)}
+function round1(){document.getElementById('doors').innerHTML=`<div class="door" onclick="shrinkAndNext(this,round2)"><span>hyunjin</span></div><div class="door" onclick="shrinkAndNext(this,round2)"><span>KAYRA</span></div>`;setText('kapını seç')}
+function round2(){document.getElementById('doors').innerHTML=`<div class="door" onclick="shrinkAndNext(this,round3)"><span>okul çıkışı dolaşmak</span></div><div class="door" onclick="shrinkAndNext(this,round3)"><span>kaçmak</span></div>`;setText('bir seçim daha')}
+function round3(){document.getElementById('doors').innerHTML=`<div class="door heart-door" onclick="next(round4)"><div class="heart">❤️</div></div><div class="door heart-door" onclick="next(round4)"><div class="heart">❤️</div></div>`;setText('beni seviyormusun')}
+function round4(){document.getElementById('doors').innerHTML=`<div class="door locked" onclick="lockedClick(this)"><div class="chain"></div><div class="chain-text">ayrılmak</div><div class="lock-msg">piçsin</div></div><div class="door" onclick="finish()"><span>:D</span></div>`;setText('son karar')}
+function lockedClick(el){const m=el.querySelector('.lock-msg');m.classList.add('show');setTimeout(()=>m.classList.remove('show'),1200)}
+function finish(){document.getElementById('doors').innerHTML='';setTimeout(()=>{const lines=['2. ayımız kutlu olsun','ne kadar odun olsanda','ne kadar utangaç biri olup sanki beni sevmiyormuş gibi yapsanda','ki bu senin elinde değil biliyorum','seni çok seviyorum ve böyle devam etmesini diliyorum','tek isteğim bu','neyse bunu yapmakla çok uğraştım','film gibi bitsin istedim','umarım beğenirsin ❤'];let i=0;const text=document.getElementById('text');function flow(){if(i<lines.length){text.innerText=lines[i];text.style.animation='slideDown 1.8s ease';i++;setTimeout(flow,2200)}}flow()},2500)},50);setTimeout(flow,3500)}else{setTimeout(()=>{e.style.transition='opacity 3s';e.style.opacity=0},3500)}})()},4000)}
 </script>
+</body>
+</html>
